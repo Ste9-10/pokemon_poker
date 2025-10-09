@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon Poker - {{ room.name }}</title>
+    <style>
+        :root {
+            --pokemon-red: #FF0000;
+            --pokemon-blue: #3B4CCA;
+            --pokemon-yellow: #FFDE00;
+            --pokemon-dark: #2A2A2A;
+            --poker-green: #35654D;
+            --poker-gold: #D4AF37;
+        }
+        
+        body {
+            background: radial-gradient(circle, #F8F8F8, var(--pokemon-blue));
+            margin: 0;
+            padding: 20px;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        .room-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(145deg, var(--pokemon-red), var(--poker-green));
+            border: 5px solid var(--poker-gold);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: var(--pokemon-yellow);
+        }
+        
+        .room-info {
+            background: white;
+            border: 5px solid var(--poker-gold);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .room-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--pokemon-dark);
+            margin-bottom: 10px;
+        }
+        
+        .room-details {
+            font-size: 16px;
+            color: var(--pokemon-dark);
+            margin-bottom: 20px;
+        }
+        
+        .players-section {
+            background: white;
+            border: 5px solid var(--poker-gold);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .players-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--pokemon-dark);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .players-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .player-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background: var(--poker-green);
+            border-radius: 10px;
+            color: white;
+            transition: all 0.2s;
+        }
+        
+        .player-card.creator {
+            background: linear-gradient(145deg, var(--pokemon-yellow), var(--poker-gold));
+            color: var(--pokemon-dark);
+            border: 3px solid var(--pokemon-red);
+        }
+        
+        .player-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .player-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--poker-gold);
+            object-fit: cover;
+        }
+        
+        .player-name {
+            font-weight: bold;
+        }
+        
+        .creator-badge {
+            background: var(--pokemon-red);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .kick-btn {
+            padding: 5px 10px;
+            background: var(--pokemon-red);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .kick-btn:hover {
+            background: #cc0000;
+            transform: translateY(-1px);
+        }
+        
+        .actions-section {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .btn-action {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 18px;
+            transition: all 0.3s;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-start {
+            background: linear-gradient(to bottom, var(--pokemon-red), #CC0000);
+            color: var(--pokemon-yellow);
+        }
+        
+        .btn-leave {
+            background: linear-gradient(to bottom, var(--pokemon-dark), #1a1a1a);
+            color: var(--pokemon-yellow);
+        }
+        
+        .btn-lobby {
+            background: linear-gradient(to bottom, var(--pokemon-blue), #2a3a9a);
+            color: white;
+        }
+        
+        .btn-action:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+        }
+        
+        .btn-action:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .waiting-message {
+            background: rgba(255, 255, 255, 0.9);
+            border: 3px solid var(--poker-gold);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .pokeball {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(to bottom, var(--pokemon-red) 45%, var(--pokemon-dark) 45%, var(--pokemon-dark) 55%, white 55%);
+            border-radius: 50%;
+            border: 2px solid var(--pokemon-dark);
+            margin: 0 5px;
+            position: relative;
+            vertical-align: middle;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .pokeball::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 8px;
+            height: 8px;
+            background-color: white;
+            border-radius: 50%;
+            border: 1px solid var(--pokemon-dark);
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .game-rules {
+            background: #f0f8ff;
+            border: 3px solid var(--pokemon-blue);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .rules-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--pokemon-dark);
+            margin-bottom: 15px;
+        }
+        
+        .rules-list {
+            color: var(--pokemon-dark);
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="room-container">
+        <div class="header">
+            <h1>🎮 STANZA POKÉMON POKER 🎮</h1>
+            <a href="{{ url_for('lobby') }}" class="btn-lobby">
+                🏠 Torna alla Lobby
+            </a>
+        </div>
+        
+        <div class="room-info">
+            <div class="room-title">{{ room.name }}</div>
+            <div class="room-details">
+                Creata da: <strong>{{ room.creator }}</strong> | 
+                Giocatori: <strong>{{ room.players|length }}/10</strong>
+            </div>
+        </div>
+        
+        <div class="players-section">
+            <div class="players-title">
+                <span class="pokeball"></span>
+                Giocatori nella Stanza
+                <span class="pokeball"></span>
+            </div>
+            
+            <div class="players-grid">
+                {% for player in room.players %}
+                <div class="player-card {% if player == room.creator %}creator{% endif %}">
+                    <div class="player-info">
+                        <img class="player-avatar" 
+                             src="{{ url_for('get_avatar', filename=creds[player]['avatar']) }}" 
+                             alt="{{ player }} avatar">
+                        <div>
+                            <div class="player-name">{{ player }}</div>
+                            {% if player == room.creator %}
+                                <div class="creator-badge">👑 CREATORE</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if user == room.creator and player != room.creator %}
+                    <button class="kick-btn" onclick="kickPlayer('{{ player }}')">
+                        ❌ Espelli
+                    </button>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        {% if not room.game_started %}
+        <div class="waiting-message">
+            <div class="pokeball"></div>
+            <strong>In attesa che il creatore avvii la partita...</strong>
+            <div class="pokeball"></div>
+        </div>
+        {% endif %}
+        
+        <div class="actions-section">
+            {% if user == room.creator %}
+                {% if room.players|length >= 2 %}
+                <form action="{{ url_for('start_game', room_id=room.id) }}" method="post" style="display: inline;">
+                    <button type="submit" class="btn-action btn-start">
+                        🚀 Inizia Partita
+                    </button>
+                </form>
+                {% else %}
+                <button class="btn-action btn-start" disabled>
+                    🚀 Servono almeno 2 giocatori
+                </button>
+                {% endif %}
+            {% endif %}
+            
+            <form action="{{ url_for('leave_room', room_id=room.id) }}" method="post" style="display: inline;">
+                <button type="submit" class="btn-action btn-leave">
+                    🚪 Lascia Stanza
+                </button>
+            </form>
+        </div>
+        
+        <div class="game-rules">
+            <div class="rules-title">📋 Regole del Gioco</div>
+            <div class="rules-list">
+                <ul>
+                    <li><strong>5 Round:</strong> La partita si svolge in 5 round</li>
+                    <li><strong>Tutti contro tutti:</strong> Ogni giocatore compete contro tutti gli altri</li>
+                    <li><strong>Timer turni:</strong> Hai 60 secondi per fare la tua mossa</li>
+                    <li><strong>Cambio carte:</strong> Puoi scartare e pescare nuove carte una volta per round</li>
+                    <li><strong>Vincitore:</strong> Chi vince più round vince la partita</li>
+                    <li><strong>Mani poker:</strong> Scala Reale, Poker, Full, Colore, Scala, Tris, Doppia Coppia, Coppia, Carta Alta</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function kickPlayer(playerName) {
+            if (confirm(`Sei sicuro di voler espellere ${playerName}?`)) {
+                fetch(`/kick_player/{{ room.id }}/${playerName}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                }).then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('Network response was not ok');
+                })
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Errore: ' + (data.error || 'Impossibile espellere il giocatore'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Errore:', error);
+                    alert('Errore di connessione. Riprova.');
+                });
+            }
+        }
+        
+        // Auto-refresh per aggiornare la lista giocatori
+        setInterval(function() {
+            fetch('/room_status/{{ room.id }}')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.game_started) {
+                        window.location.href = '/game/{{ room.id }}';
+                    } else {
+                        // Controlla se il numero di giocatori è cambiato
+                        const currentPlayers = {{ room.players|length }};
+                        if (data.players && data.players.length !== currentPlayers) {
+                            location.reload();
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.log('Errore nel controllo stato stanza:', error);
+                });
+        }, 2000);
+    </script>
+</body>
+</html>

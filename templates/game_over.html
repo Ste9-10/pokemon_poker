@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon Poker - Partita Terminata</title>
+    <style>
+        :root {
+            --pokemon-red: #FF0000;
+            --pokemon-blue: #3B4CCA;
+            --pokemon-yellow: #FFDE00;
+            --pokemon-dark: #2A2A2A;
+            --poker-green: #35654D;
+            --poker-gold: #D4AF37;
+        }
+        
+        body {
+            background: radial-gradient(circle, #F8F8F8, var(--pokemon-blue));
+            margin: 0;
+            padding: 20px;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        .game-over-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        .header {
+            background: linear-gradient(145deg, var(--pokemon-red), var(--poker-green));
+            border: 5px solid var(--poker-gold);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            color: var(--pokemon-yellow);
+        }
+        
+        .winner-announcement {
+            background: linear-gradient(145deg, var(--pokemon-yellow), var(--poker-gold));
+            border: 5px solid var(--pokemon-red);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            color: var(--pokemon-dark);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        
+        .winner-title {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 0 white;
+        }
+        
+        .winner-name {
+            font-size: 28px;
+            color: var(--pokemon-red);
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .winner-subtitle {
+            font-size: 18px;
+            font-style: italic;
+            margin-bottom: 20px;
+        }
+        
+        .results-table {
+            background: white;
+            border: 5px solid var(--poker-gold);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .results-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--pokemon-dark);
+            margin-bottom: 20px;
+        }
+        
+        .player-result {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin: 10px 0;
+            background: var(--poker-green);
+            border-radius: 8px;
+            color: white;
+        }
+        
+        .player-result.winner {
+            background: linear-gradient(145deg, var(--pokemon-yellow), var(--poker-gold));
+            color: var(--pokemon-dark);
+            border: 3px solid var(--pokemon-red);
+        }
+        
+        .player-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .player-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid var(--poker-gold);
+            object-fit: cover;
+        }
+        
+        .player-name {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        
+        .player-score {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+        
+        .round-wins {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .hand-name {
+            font-size: 14px;
+            font-style: italic;
+            opacity: 0.8;
+        }
+        
+        .final-hands {
+            background: white;
+            border: 5px solid var(--poker-gold);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .hands-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--pokemon-dark);
+            margin-bottom: 20px;
+        }
+        
+        .player-hand {
+            margin-bottom: 20px;
+        }
+        
+        .hand-label {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--pokemon-dark);
+            margin-bottom: 10px;
+        }
+        
+        .hand {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .card {
+            width: 80px;
+            height: 110px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid var(--pokemon-dark);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .card.spades { border-left: 8px solid #FF4422; }
+        .card.hearts { border-left: 8px solid #3399FF; }
+        .card.clubs { border-left: 8px solid #77CC55; }
+        .card.diamonds { border-left: 8px solid #FFCC33; }
+        
+        .card-value {
+            font-weight: bold;
+            font-size: 14px;
+            color: var(--pokemon-dark);
+        }
+        
+        .card-pokemon {
+            font-size: 10px;
+            text-align: center;
+            margin-top: auto;
+            color: var(--pokemon-dark);
+            font-weight: 500;
+        }
+        
+        .actions {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .btn-action {
+            padding: 15px 30px;
+            background: linear-gradient(to bottom, var(--pokemon-red), #CC0000);
+            color: var(--pokemon-yellow);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 18px;
+            transition: all 0.3s;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-action:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(to bottom, var(--pokemon-dark), #1a1a1a);
+        }
+        
+        .pokeball {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(to bottom, var(--pokemon-red) 45%, var(--pokemon-dark) 45%, var(--pokemon-dark) 55%, white 55%);
+            border-radius: 50%;
+            border: 3px solid var(--pokemon-dark);
+            margin: 0 10px;
+            position: relative;
+            vertical-align: middle;
+        }
+        
+        .pokeball::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 12px;
+            height: 12px;
+            background-color: white;
+            border-radius: 50%;
+            border: 2px solid var(--pokemon-dark);
+            box-shadow: 0 0 0 1px white;
+        }
+
+        .match-summary {
+            background: rgba(255, 255, 255, 0.9);
+            border: 3px solid var(--poker-gold);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .summary-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--pokemon-dark);
+            margin-bottom: 15px;
+        }
+
+        .summary-text {
+            font-size: 16px;
+            color: var(--pokemon-dark);
+            line-height: 1.5;
+        }
+        
+        @keyframes celebration {
+            0% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.1) rotate(5deg); }
+            50% { transform: scale(1) rotate(0deg); }
+            75% { transform: scale(1.1) rotate(-5deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+        
+        .winner-announcement {
+            animation: celebration 2s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-over-container">
+        <div class="header">
+            <h1>🏆 PARTITA TERMINATA 🏆</h1>
+        </div>
+        
+        <div class="winner-announcement">
+            <div class="winner-title">
+                🎉 VINCITORE 🎉
+            </div>
+            <div class="pokeball"></div>
+            <div class="winner-name">{{ game.winner }}</div>
+            <div class="winner-subtitle">Ha vinto {{ game.round_wins[game.winner] }} round su {{ game.max_rounds }}!</div>
+            <div class="pokeball"></div>
+        </div>
+
+        <div class="match-summary">
+            <div class="summary-title">📊 RESOCONTO PARTITA</div>
+            <div class="summary-text">
+                Partita completata dopo {{ game.max_rounds }} round di Pokémon Poker.<br>
+                <strong>{{ game.winner }}</strong> ha dominato vincendo {{ game.round_wins[game.winner] }} round contro {{ game.round_wins[game.players[0] if game.players[0] != game.winner else game.players[1]] }} dell'avversario.
+            </div>
+        </div>
+        
+        <div class="results-table">
+            <div class="results-title">RISULTATI FINALI</div>
+            {% for player in game.players %}
+            <div class="player-result {% if player == game.winner %}winner{% endif %}">
+                <div class="player-info">
+                    <img class="player-avatar" src="{{ url_for('get_avatar', filename=creds[player]['avatar']) }}" alt="{{ player }} avatar">
+                    <span class="player-name">{{ player }}</span>
+                </div>
+                <div class="player-score">
+                    <div class="round-wins">{{ game.round_wins[player] }} round vinti</div>
+                    <div class="hand-name">
+                        Ultima mano: 
+                        {% if game.scores[player] >= 10000 %}
+                            Scala Reale
+                        {% elif game.scores[player] >= 9000 %}
+                            Scala Colore
+                        {% elif game.scores[player] >= 8000 %}
+                            Poker
+                        {% elif game.scores[player] >= 7000 %}
+                            Full
+                        {% elif game.scores[player] >= 6000 %}
+                            Colore
+                        {% elif game.scores[player] >= 5000 %}
+                            Scala
+                        {% elif game.scores[player] >= 4000 %}
+                            Tris
+                        {% elif game.scores[player] >= 3000 %}
+                            Doppia Coppia
+                        {% elif game.scores[player] >= 2000 %}
+                            Coppia
+                        {% else %}
+                            Carta Alta
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="final-hands">
+            <div class="hands-title">MANI FINALI</div>
+            {% for player in game.players %}
+            <div class="player-hand">
+                <div class="hand-label">{{ player }}</div>
+                <div class="hand">
+                    {% for card in game.hands[player] %}
+                    <div class="card {{ card.suit }}">
+                        <div class="card-value">{{ card.value }}</div>
+                        <div class="card-pokemon">{{ card.pokemon }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="actions">
+            <a href="{{ url_for('lobby') }}" class="btn-action">TORNA ALLA LOBBY</a>
+            <a href="{{ url_for('logout') }}" class="btn-action btn-secondary">LOGOUT</a>
+        </div>
+    </div>
+</body>
+</html>

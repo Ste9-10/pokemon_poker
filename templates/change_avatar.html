@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cambia Avatar - Pokémon Poker</title>
+    <style>
+        :root {
+            --pokemon-red: #FF0000;
+            --pokemon-blue: #3B4CCA;
+            --pokemon-yellow: #FFDE00;
+            --pokemon-dark: #2A2A2A;
+            --poker-green: #35654D;
+            --poker-gold: #D4AF37;
+        }
+        
+        body {
+            background: radial-gradient(circle, #F8F8F8, var(--pokemon-blue));
+            margin: 0;
+            padding: 20px;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .avatar-container {
+            background: linear-gradient(145deg, var(--pokemon-red), var(--poker-green));
+            border: 8px solid var(--poker-gold);
+            border-radius: 15px;
+            padding: 30px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            position: relative;
+        }
+        
+        h1 {
+            color: var(--pokemon-yellow);
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 0 var(--pokemon-blue);
+        }
+        
+        .avatar-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .avatar-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        
+        .avatar-option:hover {
+            transform: scale(1.05);
+        }
+        
+        .avatar-option img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 3px solid var(--pokemon-yellow);
+            object-fit: cover;
+            margin-bottom: 10px;
+        }
+        
+        .avatar-option input[type="radio"] {
+            display: none;
+        }
+        
+        .avatar-option input[type="radio"]:checked + img {
+            border-color: var(--poker-gold);
+            box-shadow: 0 0 15px var(--pokemon-yellow);
+        }
+        
+        .upload-section {
+            margin-top: 30px;
+            text-align: center;
+        }
+        
+        .upload-btn {
+            background: var(--pokemon-dark);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .btn-submit {
+            background: linear-gradient(to bottom, var(--pokemon-red), #CC0000);
+            color: var(--pokemon-yellow);
+            border: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            display: block;
+            width: 100%;
+            margin-top: 20px;
+            font-size: 18px;
+            transition: all 0.3s;
+        }
+        
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .flash-message {
+            color: white;
+            background-color: var(--pokemon-red);
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            margin-bottom: 20px;
+            animation: fadeIn 0.5s;
+        }
+        
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+            background: var(--pokemon-dark);
+            color: var(--pokemon-yellow);
+            border: none;
+        }
+        
+        .logout-btn:hover {
+            background: #1a1a1a;
+            transform: translateY(-2px);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Stile per nascondere l'input file predefinito */
+        #avatar-upload {
+            display: none;
+        }
+
+        /* Stile per mostrare il nome del file selezionato */
+        .file-info {
+            color: white;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="avatar-container">
+        <button class="logout-btn" onclick="window.location.href='/logout'">
+            Logout
+        </button>
+        
+        <h1>Scegli il tuo Avatar</h1>
+        
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash-message">
+                    {{ messages[0] }}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        <form id="avatar-form" action="{{ url_for('change_avatar') }}" method="post" enctype="multipart/form-data">
+            <div class="avatar-options">
+                {% for avatar in default_avatars %}
+                <label class="avatar-option">
+                    <input type="radio" name="selected_avatar" value="{{ avatar }}" onchange="handleAvatarSelection()">
+                    <img src="{{ url_for('get_avatar', filename=avatar) }}" alt="{{ avatar }}">
+                </label>
+                {% endfor %}
+            </div>
+            
+            <div class="upload-section">
+                <h3>OPPURE CARICA UN'IMMAGINE</h3>
+                <label for="avatar-upload" class="upload-btn">Scegli file</label>
+                <input type="file" name="avatar" id="avatar-upload" accept=".jpg,.jpeg,.png" onchange="handleFileSelection(this)">
+                <div id="file-info" class="file-info"></div>
+            </div>
+            
+            <button type="submit" class="btn-submit" id="submit-btn" disabled>SALVA E INIZIA A GIOCARE</button>
+        </form>
+    </div>
+
+    <script>
+        // Abilita il pulsante di submit quando viene selezionato un avatar o un file
+        function handleAvatarSelection() {
+            document.getElementById('submit-btn').disabled = false;
+            document.getElementById('file-info').textContent = '';
+            document.getElementById('avatar-upload').value = '';
+        }
+
+        function handleFileSelection(input) {
+            if (input.files && input.files[0]) {
+                document.getElementById('submit-btn').disabled = false;
+                document.getElementById('file-info').textContent = 'File selezionato: ' + input.files[0].name;
+                
+                // Deseleziona eventuali avatar predefiniti selezionati
+                const radios = document.querySelectorAll('input[type="radio"]');
+                radios.forEach(radio => radio.checked = false);
+            } else {
+                document.getElementById('submit-btn').disabled = true;
+                document.getElementById('file-info').textContent = '';
+            }
+        }
+
+        // Controlla se è già stato selezionato qualcosa al caricamento della pagina
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('avatar-form');
+            form.addEventListener('submit', function(e) {
+                const avatarSelected = document.querySelector('input[name="selected_avatar"]:checked');
+                const fileSelected = document.getElementById('avatar-upload').files.length > 0;
+                
+                if (!avatarSelected && !fileSelected) {
+                    e.preventDefault();
+                    alert('Seleziona un avatar predefinito o carica un\'immagine');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

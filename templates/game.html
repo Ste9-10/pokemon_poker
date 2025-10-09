@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon Poker - Partita</title>
+    <style>
+        :root {
+            --pokemon-red: #FF0000;
+            --pokemon-blue: #3B4CCA;
+            --pokemon-yellow: #FFDE00;
+            --pokemon-dark: #2A2A2A;
+            --poker-green: #35654D;
+            --poker-gold: #D4AF37;
+        }
+        
+        body {
+            background: radial-gradient(circle, #F8F8F8, var(--pokemon-blue));
+            margin: 0;
+            padding: 20px;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        .game-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(145deg, var(--pokemon-red), var(--poker-green));
+            border: 5px solid var(--poker-gold);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: var(--pokemon-yellow);
+        }
+        
+        .game-info {
+            background: rgba(255, 255, 255, 0.9);
+            border: 3px solid var(--poker-gold);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .turn-timer {
+            background: var(--pokemon-red);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 18px;
+            animation: pulse 1s infinite;
+        }
+        
+        .turn-timer.warning {
+            background: #ff6600;
+            animation: fastPulse 0.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes fastPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .game-table {
+            background: var(--poker-green);
+            border: 10px solid var(--poker-gold);
+            border-radius: 20px;
+            padding: 20px;
+            min-height: 600px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        
+        .players-area {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .player {
+            background: white;
+            border: 5px solid var(--pokemon-red);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .player.active {
+            border-color: var(--pokemon-yellow);
+            box-shadow: 0 0 20px var(--pokemon-yellow);
+            transform: translateY(-5px);
+        }
+        
+        .player.current-user {
+            border-color: var(--pokemon-blue);
+            background: #f0f8ff;
+        }
+        
+        .player-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .player-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 3px solid var(--poker-gold);
+            object-fit: cover;
+        }
+        
+        .player-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--pokemon-dark);
+        }
+        
+        .hand {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            min-height: 120px;
+            margin: 10px 0;
+        }
+        
+        .card {
+            width: 80px;
+            height: 110px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid var(--pokemon-dark);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 5px;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            cursor: pointer;
+        }
+        
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+        }
+        
+        .card.selected {
+            border-color: var(--pokemon-yellow);
+            background: #fff3cd;
+            transform: translateY(-8px);
+        }
+        
+        .card.hidden {
+            background: linear-gradient(145deg, var(--pokemon-red), var(--pokemon-dark));
+            color: white;
+        }
+        
+        .card.spades { border-left: 6px solid #FF4422; }
+        .card.hearts { border-left: 6px solid #3399FF; }
+        .card.clubs { border-left: 6px solid #77CC55; }
+        .card.diamonds { border-left: 6px solid #FFCC33; }
+        
+        .card-value {
+            font-weight: bold;
+            font-size: 14px;
+            color: var(--pokemon-dark);
+        }
+        
+        .card-pokemon {
+            font-size: 10px;
+            text-align: center;
+            margin-top: auto;
+            color: var(--pokemon-dark);
+            font-weight: 500;
+        }
+        
+        .actions {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn-action {
+            padding: 8px 15px;
+            background: linear-gradient(to bottom, var(--pokemon-red), #CC0000);
+            color: var(--pokemon-yellow);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+            transition: all 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+        }
+        
+        .btn-action:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .selected-cards-info {
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid var(--pokemon-yellow);
+            border-radius: 5px;
+            padding: 8px;
+            margin: 8px 0;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        
+        .round-result {
+            background: linear-gradient(145deg, var(--pokemon-yellow), var(--poker-gold));
+            border: 5px solid var(--pokemon-red);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            text-align: center;
+            color: var(--pokemon-dark);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            animation: celebration 1s ease-in-out;
+        }
+        
+        .round-result h2 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 0 white;
+        }
+        
+        .round-result .winner-name {
+            font-size: 20px;
+            color: var(--pokemon-red);
+            font-weight: bold;
+            margin: 8px 0;
+        }
+        
+        .round-result .hand-name {
+            font-size: 16px;
+            font-style: italic;
+            margin: 8px 0;
+        }
+        
+        .round-wins {
+            background: rgba(255, 255, 255, 0.9);
+            border: 3px solid var(--poker-gold);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+        }
+        
+        .round-wins h3 {
+            color: var(--pokemon-dark);
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        
+        .wins-display {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .player-wins {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .wins-count {
+            background: var(--pokemon-red);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 50%;
+            font-weight: bold;
+            min-width: 20px;
+            text-align: center;
+        }
+        
+        @keyframes celebration {
+            0% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.05) rotate(1deg); }
+            50% { transform: scale(1) rotate(0deg); }
+            75% { transform: scale(1.05) rotate(-1deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+        
+        .game-phase {
+            background: var(--pokemon-yellow);
+            color: var(--pokemon-dark);
+            padding: 8px;
+            border-radius: 5px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>🎮 POKÉMON POKER 🎮</h1>
+            <a href="{{ url_for('lobby') }}" style="color: var(--pokemon-yellow); text-decoration: none; font-weight: bold;">
+                🏠 Lobby
+            </a>
+        </div>
+        
+        <div class="game-info">
+            <div>
+                <strong>Round {{ game.round }}/{{ game.max_rounds }}</strong>
+                {% if game.phase == 'round_result' %}
+                    - Risultato Round
+                {% elif game.phase == 'cambio' %}
+                    - Turno di <strong>{{ game.players[game.current_player] }}</strong>
+                {% endif %}
+            </div>
+            
+            {% if game.phase == 'cambio' and game.players[game.current_player] == user %}
+            <div class="turn-timer" id="turnTimer">
+                ⏰ {{ turn_time_left|int }}s
+            </div>
+            {% endif %}
+        </div>
+        
+        {% if game.phase %}
+        <div class="game-phase">
+            {% if game.phase == 'cambio' %}
+                Fase: Cambio Carte
+            {% elif game.phase == 'round_result' %}
+                Fase: Risultato Round
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <!-- Mostra le vittorie per round -->
+        <div class="round-wins">
+            <h3>🏆 Vittorie per Round</h3>
+            <div class="wins-display">
+                {% for player in game['players'] %}
+                <div class="player-wins">
+                    <img class="player-avatar" src="{{ url_for('get_avatar', filename=creds[player]['avatar']) }}" alt="{{ player }} avatar" style="width: 30px; height: 30px;">
+                    <span>{{ player }}</span>
+                    <span class="wins-count">{{ game.round_wins[player] }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Mostra il risultato del round se disponibile -->
+        {% if game.show_round_result %}
+        <div class="round-result">
+            <h2>🏆 VINCITORE DEL ROUND {{ game.round }} 🏆</h2>
+            <div class="winner-name">{{ game.round_winner }}</div>
+            <div class="hand-name">con {{ game.round_winner_hand }}</div>
+            <div style="margin-top: 15px;">
+                <button class="btn-action" onclick="nextRound()" style="padding: 10px 20px; font-size: 14px;">
+                    {% if game.round >= game.max_rounds %}
+                        🎯 Vai ai Risultati Finali
+                    {% else %}
+                        ➡️ Prossimo Round
+                    {% endif %}
+                </button>
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="game-table">
+            <div class="players-area">
+                {% for player in game['players'] %}
+                <div class="player {% if game.players[game.current_player] == player and game.phase == 'cambio' %}active{% endif %} {% if player == user %}current-user{% endif %}">
+                    <div class="player-info">
+                        <img class="player-avatar" src="{{ url_for('get_avatar', filename=creds[player]['avatar']) }}" alt="{{ player }} avatar">
+                        <span class="player-name">{{ player }}</span>
+                        {% if player == user %}
+                        <span style="color: var(--pokemon-blue); font-size: 12px;">(Tu)</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="hand">
+                        {% for card in game['hands'][player] %}
+                            {% if player == user %}
+                                <!-- Mostra le carte del giocatore corrente -->
+                                <div class="card {{ card['suit'] }}" data-card-index="{{ loop.index0 }}" onclick="toggleCardSelection(this)">
+                                    <div class="card-value">{{ card['value'] }}</div>
+                                    <div class="card-pokemon">{{ card['pokemon'] }}</div>
+                                </div>
+                            {% else %}
+                                <!-- Nascondi le carte degli altri giocatori -->
+                                <div class="card hidden">
+                                    <div class="card-value">🎴</div>
+                                    <div class="card-pokemon">Pokémon</div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    
+                    {% if player == user and game.players[game.current_player] == user and game.phase == 'cambio' %}
+                    <div class="selected-cards-info" id="selectedCardsInfo" style="display: none;">
+                        Carte selezionate: <span id="selectedCount">0</span>/5
+                    </div>
+                    
+                    <div class="actions">
+                        <button class="btn-action" onclick="discardSelectedCards()" id="discardBtn" disabled>
+                            🔄 Cambia Carte
+                        </button>
+                        <button class="btn-action" onclick="skipDiscard()">
+                            ⏭️ Non Cambiare
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let selectedCards = [];
+        let refreshInterval;
+        let isActionInProgress = false;
+        let timerInterval;
+        
+        function toggleCardSelection(cardElement) {
+            const cardIndex = parseInt(cardElement.getAttribute('data-card-index'));
+            const isSelected = cardElement.classList.contains('selected');
+            
+            if (isSelected) {
+                cardElement.classList.remove('selected');
+                selectedCards = selectedCards.filter(index => index !== cardIndex);
+            } else {
+                if (selectedCards.length < 5) {
+                    cardElement.classList.add('selected');
+                    selectedCards.push(cardIndex);
+                }
+            }
+            
+            updateSelectedCardsInfo();
+        }
+        
+        function updateSelectedCardsInfo() {
+            const infoElement = document.getElementById('selectedCardsInfo');
+            const countElement = document.getElementById('selectedCount');
+            const discardBtn = document.getElementById('discardBtn');
+            
+            if (selectedCards.length > 0) {
+                infoElement.style.display = 'block';
+                countElement.textContent = selectedCards.length;
+                discardBtn.disabled = false;
+            } else {
+                infoElement.style.display = 'none';
+                discardBtn.disabled = true;
+            }
+        }
+        
+        function discardSelectedCards() {
+            if (selectedCards.length === 0) return;
+            
+            isActionInProgress = true;
+            stopAutoRefresh();
+            
+            fetch('/action/discard_selected', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    selected_cards: selectedCards
+                })
+            }).then(response => {
+                if (response.ok) {
+                    window.location.reload();
+                }
+            }).catch(error => {
+                console.error('Errore:', error);
+                window.location.reload();
+            });
+        }
+        
+        function skipDiscard() {
+            isActionInProgress = true;
+            stopAutoRefresh();
+            
+            fetch('/action/skip_discard', {
+                method: 'POST'
+            }).then(response => {
+                if (response.ok) {
+                    window.location.reload();
+                }
+            }).catch(error => {
+                console.error('Errore:', error);
+                window.location.reload();
+            });
+        }
+        
+        function nextRound() {
+            isActionInProgress = true;
+            stopAutoRefresh();
+            
+            fetch('/action/next_round', {
+                method: 'POST'
+            }).then(response => {
+                if (response.ok) {
+                    window.location.reload();
+                }
+            }).catch(error => {
+                console.error('Errore:', error);
+                window.location.reload();
+            });
+        }
+        
+        function startTurnTimer() {
+            const timerElement = document.getElementById('turnTimer');
+            if (!timerElement) return;
+            
+            let timeLeft = {{ turn_time_left|int }};
+            
+            timerInterval = setInterval(function() {
+                timeLeft--;
+                timerElement.textContent = `⏰ ${timeLeft}s`;
+                
+                if (timeLeft <= 10) {
+                    timerElement.classList.add('warning');
+                }
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    window.location.reload();
+                }
+            }, 1000);
+        }
+        
+        function startAutoRefresh() {
+            if (isActionInProgress) return;
+            
+            refreshInterval = setInterval(function() {
+                if (isActionInProgress) return;
+                
+                fetch('/game_status/{{ game_id }}')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.game_over) {
+                            window.location.reload();
+                        } else {
+                            const currentPlayer = {{ game.current_player }};
+                            const currentPhase = '{{ game.phase }}';
+                            const showRoundResult = {{ 'true' if game.show_round_result else 'false' }};
+                            
+                            if (data.current_player !== currentPlayer || 
+                                data.phase !== currentPhase ||
+                                data.show_round_result !== showRoundResult) {
+                                window.location.reload();
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.log('Errore nel controllo stato:', error);
+                    });
+            }, 2000);
+        }
+        
+        function stopAutoRefresh() {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+                refreshInterval = null;
+            }
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            startAutoRefresh();
+            startTurnTimer();
+            
+            window.addEventListener('beforeunload', function() {
+                isActionInProgress = true;
+                stopAutoRefresh();
+            });
+            
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden) {
+                    stopAutoRefresh();
+                } else if (!isActionInProgress) {
+                    startAutoRefresh();
+                    startTurnTimer();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
