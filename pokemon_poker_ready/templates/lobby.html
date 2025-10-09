@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon Poker - Lobby</title>
+    <style>
+        :root {
+            --pokemon-red: #FF0000;
+            --pokemon-blue: #3B4CCA;
+            --pokemon-yellow: #FFDE00;
+            --pokemon-dark: #2A2A2A;
+            --poker-green: #35654D;
+            --poker-gold: #D4AF37;
+        }
+        
+        body {
+            background: radial-gradient(circle, #F8F8F8, var(--pokemon-blue));
+            margin: 0;
+            padding: 20px;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        .lobby-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(145deg, var(--pokemon-red), var(--poker-green));
+            border: 5px solid var(--poker-gold);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: var(--pokemon-yellow);
+        }
+        
+        .player-header-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .header-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid var(--poker-gold);
+            object-fit: cover;
+        }
+        
+        .header-username {
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .logout-btn {
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+            background: var(--pokemon-dark);
+            color: var(--pokemon-yellow);
+            border: none;
+            text-decoration: none;
+        }
+        
+        .logout-btn:hover {
+            background: #1a1a1a;
+            transform: translateY(-2px);
+        }
+        
+        .lobby-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .create-room-section, .join-room-section {
+            background: white;
+            border: 5px solid var(--poker-gold);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        
+        .section-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--pokemon-dark);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            font-weight: bold;
+            color: var(--pokemon-dark);
+            margin-bottom: 8px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 3px solid var(--poker-gold);
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--pokemon-red);
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.3);
+        }
+        
+        .btn-primary {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(to bottom, var(--pokemon-red), #CC0000);
+            color: var(--pokemon-yellow);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 18px;
+            transition: all 0.3s;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+        }
+        
+        .rooms-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .room-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: var(--poker-green);
+            border-radius: 8px;
+            color: white;
+            transition: all 0.2s;
+        }
+        
+        .room-item:hover {
+            background: #2a5a3d;
+            transform: translateY(-2px);
+        }
+        
+        .room-info {
+            flex-grow: 1;
+        }
+        
+        .room-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .room-details {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        .room-players {
+            background: var(--pokemon-yellow);
+            color: var(--pokemon-dark);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .btn-join {
+            padding: 8px 15px;
+            background: var(--pokemon-yellow);
+            color: var(--pokemon-dark);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        
+        .btn-join:hover {
+            background: #e6c700;
+            transform: translateY(-2px);
+        }
+        
+        .no-rooms {
+            text-align: center;
+            padding: 40px;
+            color: var(--pokemon-dark);
+            font-style: italic;
+        }
+        
+        .pokeball {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(to bottom, var(--pokemon-red) 45%, var(--pokemon-dark) 45%, var(--pokemon-dark) 55%, white 55%);
+            border-radius: 50%;
+            border: 2px solid var(--pokemon-dark);
+            margin: 0 5px;
+            position: relative;
+            vertical-align: middle;
+        }
+        
+        .pokeball::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 8px;
+            height: 8px;
+            background-color: white;
+            border-radius: 50%;
+            border: 1px solid var(--pokemon-dark);
+        }
+        
+        @media (max-width: 768px) {
+            .lobby-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="lobby-container">
+        <div class="header">
+            <h1>🎮 POKÉMON POKER LOBBY 🎮</h1>
+            <div class="player-header-info">
+                <img class="header-avatar" src="{{ url_for('get_avatar', filename=creds[user]['avatar']) }}" alt="Avatar">
+                <span class="header-username">{{ user }}</span>
+            </div>
+            <button class="logout-btn" onclick="window.location.href='/logout'">
+                Logout
+            </button>
+        </div>
+        
+        <div class="lobby-content">
+            <!-- Sezione Crea Stanza -->
+            <div class="create-room-section">
+                <h2 class="section-title">
+                    <span class="pokeball"></span>
+                    Crea Nuova Stanza
+                    <span class="pokeball"></span>
+                </h2>
+                
+                <form action="{{ url_for('create_room') }}" method="post">
+                    <div class="form-group">
+                        <label class="form-label" for="room_name">Nome della Stanza:</label>
+                        <input type="text" 
+                               id="room_name" 
+                               name="room_name" 
+                               class="form-input" 
+                               placeholder="Inserisci il nome della stanza..."
+                               value="Stanza di {{ user }}"
+                               maxlength="50">
+                    </div>
+                    
+                    <button type="submit" class="btn-primary">
+                        🏗️ Crea Stanza
+                    </button>
+                </form>
+                
+                <div style="margin-top: 20px; padding: 15px; background: #f0f8ff; border-radius: 8px; border-left: 4px solid var(--pokemon-blue);">
+                    <h4 style="margin: 0 0 10px 0; color: var(--pokemon-dark);">📋 Regole della Stanza:</h4>
+                    <ul style="margin: 0; padding-left: 20px; color: var(--pokemon-dark); font-size: 14px;">
+                        <li>Massimo 10 giocatori per stanza</li>
+                        <li>Solo il creatore può iniziare la partita</li>
+                        <li>Il creatore può espellere altri giocatori</li>
+                        <li>Servono almeno 2 giocatori per iniziare</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Sezione Unisciti a Stanza -->
+            <div class="join-room-section">
+                <h2 class="section-title">
+                    <span class="pokeball"></span>
+                    Stanze Disponibili
+                    <span class="pokeball"></span>
+                </h2>
+                
+                <div class="rooms-list">
+                    {% if available_rooms %}
+                        {% for room in available_rooms %}
+                        <div class="room-item">
+                            <div class="room-info">
+                                <div class="room-name">{{ room.name }}</div>
+                                <div class="room-details">
+                                    Creata da: <strong>{{ room.creator }}</strong>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center;">
+                                <div class="room-players">
+                                    {{ room.players }}/{{ room.max_players }}
+                                </div>
+                                <a href="{{ url_for('join_room', room_id=room.id) }}" class="btn-join">
+                                    🚪 Entra
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="no-rooms">
+                            <div class="pokeball" style="width: 50px; height: 50px; margin: 20px auto;"></div>
+                            <p>Nessuna stanza disponibile al momento.</p>
+                            <p>Crea una nuova stanza per iniziare a giocare!</p>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div style="margin-top: 20px; text-align: center;">
+                    <button onclick="location.reload()" class="btn-primary" style="width: auto; padding: 10px 20px;">
+                        🔄 Aggiorna Lista
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Auto-refresh della lista stanze ogni 5 secondi
+        setInterval(function() {
+            location.reload();
+        }, 5000);
+    </script>
+</body>
+</html>

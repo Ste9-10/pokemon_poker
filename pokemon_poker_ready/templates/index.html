@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poker Pokémon - Accedi</title>
+    <style>
+        :root {
+            --pokemon-red: #FF0000;
+            --pokemon-blue: #3B4CCA;
+            --pokemon-yellow: #FFDE00;
+            --pokemon-dark: #2A2A2A;
+            --pokemon-light: #F8F8F8;
+            --poker-green: #35654D;
+            --poker-gold: #D4AF37;
+        }
+        
+        * {
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        @font-face {
+            font-family: 'Pokemon';
+            src: url('https://fonts.cdnfonts.com/css/pokemon-solid') format('woff');
+        }
+        
+        body {
+            background: radial-gradient(circle, var(--pokemon-light), var(--pokemon-blue));
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: linear-gradient(145deg, var(--pokemon-red), var(--poker-green));
+            border: 8px solid var(--poker-gold);
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 
+                        inset 0 0 15px rgba(255, 222, 0, 0.3);
+            padding: 30px;
+            width: 100%;
+            max-width: 450px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .pokeball {
+            display: block;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(to bottom, var(--pokemon-red) 45%, var(--pokemon-dark) 45%, var(--pokemon-dark) 55%, white 55%);
+            border-radius: 50%;
+            border: 4px solid var(--pokemon-dark);
+            margin: 0 auto 20px;
+            position: relative;
+        }
+        
+        .pokeball::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            background-color: white;
+            border-radius: 50%;
+            border: 4px solid var(--pokemon-dark);
+            box-shadow: 0 0 0 2px white;
+        }
+        
+        h2 {
+            color: var(--pokemon-yellow);
+            text-align: center;
+            margin-bottom: 25px;
+            font-family: 'Pokemon', sans-serif;
+            letter-spacing: 3px;
+            text-shadow: 3px 3px 0 var(--pokemon-blue), 
+                         -1px -1px 0 var(--pokemon-blue),
+                         1px -1px 0 var(--pokemon-blue),
+                         -1px 1px 0 var(--pokemon-blue),
+                         1px 1px 0 var(--pokemon-blue);
+            font-size: 28px;
+        }
+        
+        form {
+            margin-bottom: 30px;
+        }
+        
+        input {
+            width: 100%;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border: 3px solid var(--poker-gold);
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background-color: rgba(255, 255, 255, 0.9);
+            font-weight: bold;
+        }
+        
+        input:focus {
+            border-color: var(--pokemon-yellow);
+            outline: none;
+            box-shadow: 0 0 10px var(--pokemon-yellow);
+            transform: scale(1.02);
+        }
+        
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(to bottom, var(--pokemon-red), #CC0000);
+            color: var(--pokemon-yellow);
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 4px solid #8B0000;
+            font-family: 'Pokemon', sans-serif;
+            text-shadow: 2px 2px 0 var(--pokemon-blue);
+        }
+        
+        button:hover {
+            background: linear-gradient(to bottom, #CC0000, #990000);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .divider {
+            text-align: center;
+            margin: 30px 0;
+            position: relative;
+            color: var(--pokemon-yellow);
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .divider::before,
+        .divider::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            width: 40%;
+            height: 3px;
+            background: linear-gradient(to right, transparent, var(--poker-gold), transparent);
+        }
+        
+        .divider::before {
+            left: 0;
+        }
+        
+        .divider::after {
+            right: 0;
+        }
+        
+        .flash-message {
+            color: white;
+            background-color: var(--pokemon-red);
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            margin-bottom: 20px;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="pokeball"></div>
+        
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash-message">
+                    {{ messages[0] }}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        <h2>ACCEDI AL TAVOLO</h2>
+        <form action="/login" method="post">
+            <input type="text" name="username" placeholder="Allenatore" required minlength="3">
+            <input type="password" name="password" placeholder="Password Segreta" required minlength="4">
+            <button type="submit">GIOCA</button>
+        </form>
+
+        <div class="divider">POKÉMON POKER</div>
+
+        <h2>NUOVO ALLENATORE</h2>
+        <form action="/register" method="post">
+            <input type="text" name="username" placeholder="Scegli il tuo nome" required minlength="3">
+            <input type="password" name="password" placeholder="Crea una password" required minlength="4">
+            <button type="submit">REGISTRATI</button>
+        </form>
+    </div>
+</body>
+</html>
