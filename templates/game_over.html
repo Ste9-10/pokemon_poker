@@ -135,6 +135,58 @@
             opacity: 0.8;
         }
         
+        .round-history {
+            background: white;
+            border: 5px solid var(--poker-gold);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+        
+        .history-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--pokemon-dark);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .round-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin: 10px 0;
+            background: var(--poker-green);
+            border-radius: 8px;
+            color: white;
+        }
+        
+        .round-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .round-number {
+            background: var(--pokemon-yellow);
+            color: var(--pokemon-dark);
+            padding: 5px 10px;
+            border-radius: 50%;
+            font-weight: bold;
+            min-width: 30px;
+        }
+        
+        .round-winner {
+            font-weight: bold;
+        }
+        
+        .round-hand {
+            font-style: italic;
+            color: var(--pokemon-yellow);
+        }
+        
         .final-hands {
             background: white;
             border: 5px solid var(--poker-gold);
@@ -205,6 +257,7 @@
             justify-content: center;
             gap: 20px;
             margin-top: 30px;
+            flex-wrap: wrap;
         }
         
         .btn-action {
@@ -229,6 +282,10 @@
         
         .btn-secondary {
             background: linear-gradient(to bottom, var(--pokemon-dark), #1a1a1a);
+        }
+        
+        .btn-room {
+            background: linear-gradient(to bottom, var(--pokemon-blue), #2a3a9a);
         }
         
         .pokeball {
@@ -311,7 +368,7 @@
             <div class="summary-title">📊 RESOCONTO PARTITA</div>
             <div class="summary-text">
                 Partita completata dopo {{ game.max_rounds }} round di Pokémon Poker.<br>
-                <strong>{{ game.winner }}</strong> ha dominato vincendo {{ game.round_wins[game.winner] }} round contro {{ game.round_wins[game.players[0] if game.players[0] != game.winner else game.players[1]] }} dell'avversario.
+                <strong>{{ game.winner }}</strong> ha dominato vincendo {{ game.round_wins[game.winner] }} round.
             </div>
         </div>
         
@@ -372,7 +429,8 @@
         </div>
         
         <div class="actions">
-            <a href="{{ url_for('lobby') }}" class="btn-action">TORNA ALLA LOBBY</a>
+            <a href="{{ url_for('room', room_id=game_id) }}" class="btn-action btn-room">🚪 TORNA ALLA STANZA</a>
+            <a href="{{ url_for('lobby') }}" class="btn-action">🏠 TORNA ALLA LOBBY</a>
             <a href="{{ url_for('logout') }}" class="btn-action btn-secondary">LOGOUT</a>
         </div>
     </div>
