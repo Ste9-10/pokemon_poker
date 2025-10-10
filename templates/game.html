@@ -38,6 +38,28 @@
             color: var(--pokemon-yellow);
         }
         
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .nav-btn {
+            padding: 8px 15px;
+            background: var(--pokemon-dark);
+            color: var(--pokemon-yellow);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        
+        .nav-btn:hover {
+            background: #1a1a1a;
+            transform: translateY(-2px);
+        }
+        
         .game-info {
             background: rgba(255, 255, 255, 0.9);
             border: 3px solid var(--poker-gold);
@@ -46,36 +68,6 @@
             margin-bottom: 20px;
             text-align: center;
             font-weight: bold;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .turn-timer {
-            background: var(--pokemon-red);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 25px;
-            font-weight: bold;
-            font-size: 18px;
-            animation: pulse 1s infinite;
-        }
-        
-        .turn-timer.warning {
-            background: #ff6600;
-            animation: fastPulse 0.5s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-        
-        @keyframes fastPulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
         }
         
         .game-table {
@@ -334,9 +326,14 @@
     <div class="game-container">
         <div class="header">
             <h1>🎮 POKÉMON POKER 🎮</h1>
-            <a href="{{ url_for('lobby') }}" style="color: var(--pokemon-yellow); text-decoration: none; font-weight: bold;">
-                🏠 Lobby
-            </a>
+            <div class="nav-buttons">
+                <a href="{{ url_for('room', room_id=game_id) }}" class="nav-btn">
+                    🚪 Torna alla Stanza
+                </a>
+                <a href="{{ url_for('lobby') }}" class="nav-btn">
+                    🏠 Lobby
+                </a>
+            </div>
         </div>
         
         <div class="game-info">
@@ -348,12 +345,6 @@
                     - Turno di <strong>{{ game.players[game.current_player] }}</strong>
                 {% endif %}
             </div>
-            
-            {% if game.phase == 'cambio' and game.players[game.current_player] == user %}
-            <div class="turn-timer" id="turnTimer">
-                ⏰ {{ turn_time_left|int }}s
-            </div>
-            {% endif %}
         </div>
         
         {% if game.phase %}
@@ -452,7 +443,6 @@
         let selectedCards = [];
         let refreshInterval;
         let isActionInProgress = false;
-        let timerInterval;
         
         function toggleCardSelection(cardElement) {
             const cardIndex = parseInt(cardElement.getAttribute('data-card-index'));
@@ -542,27 +532,6 @@
             });
         }
         
-        function startTurnTimer() {
-            const timerElement = document.getElementById('turnTimer');
-            if (!timerElement) return;
-            
-            let timeLeft = {{ turn_time_left|int }};
-            
-            timerInterval = setInterval(function() {
-                timeLeft--;
-                timerElement.textContent = `⏰ ${timeLeft}s`;
-                
-                if (timeLeft <= 10) {
-                    timerElement.classList.add('warning');
-                }
-                
-                if (timeLeft <= 0) {
-                    clearInterval(timerInterval);
-                    window.location.reload();
-                }
-            }, 1000);
-        }
-        
         function startAutoRefresh() {
             if (isActionInProgress) return;
             
@@ -589,7 +558,7 @@
                     .catch(error => {
                         console.log('Errore nel controllo stato:', error);
                     });
-            }, 2000);
+            }, 3000); // Refresh ogni 3 secondi invece di 2
         }
         
         function stopAutoRefresh() {
@@ -597,15 +566,10 @@
                 clearInterval(refreshInterval);
                 refreshInterval = null;
             }
-            if (timerInterval) {
-                clearInterval(timerInterval);
-                timerInterval = null;
-            }
         }
         
         document.addEventListener('DOMContentLoaded', function() {
             startAutoRefresh();
-            startTurnTimer();
             
             window.addEventListener('beforeunload', function() {
                 isActionInProgress = true;
@@ -617,7 +581,6 @@
                     stopAutoRefresh();
                 } else if (!isActionInProgress) {
                     startAutoRefresh();
-                    startTurnTimer();
                 }
             });
         });
