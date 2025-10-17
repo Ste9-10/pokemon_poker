@@ -6,6 +6,7 @@ import random
 import threading
 import time
 from collections import defaultdict
+import json
 
 app = Flask(__name__)
 # Use environment variable for secret in production; fallback to default for local dev
@@ -37,43 +38,28 @@ def generate_avatar_filename(username, filename):
 def is_valid_default_avatar(avatar):
     return avatar in DEFAULT_AVATARS and os.path.exists(os.path.join(DEFAULT_AVATARS_FOLDER, avatar))
 
-# Database giocatori
-CREDENTIALS_FILE = os.path.join(BASE_DIR, 'credenziali.txt')
+# Database giocatori - USARE MEMORIA INVECE DEL FILE
+# In produzione su Render, il filesystem è ephemeral
+credentials_db = {}
 
 def load_credentials():
-    try:
-        with open(CREDENTIALS_FILE, "r") as f:
-            credenziali = {}
-            for line in f:
-                line = line.strip()
-                if not line or line.count(':') < 1:
-                    continue
-
-                parts = line.split(':')
-                username = parts[0]
-                password = parts[1]
-
-                if len(parts) >= 3:
-                    avatar = parts[2]
-                    if (not os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'], avatar))) and \
-                       (not os.path.exists(os.path.join(DEFAULT_AVATARS_FOLDER, avatar))):
-                        avatar = 'pikachu.png'  # Default avatar
-                else:
-                    avatar = 'pikachu.png'  # Default avatar
-
-                credenziali[username] = {
-                    'password': password,
-                    'avatar': avatar
-                }
-            return credenziali
-    except FileNotFoundError:
-        return {}
+    """Carica credenziali dalla memoria (non più da file)"""
+    return credentials_db.copy()
 
 def save_credentials(creds):
-    with open(CREDENTIALS_FILE, "w") as f:
-        for username, data in creds.items():
-            line = f"{username}:{data['password']}:{data.get('avatar', 'pikachu.png')}\n"
-            f.write(line)
+    """Salva credenziali in memoria (non più su file)"""
+    global credentials_db
+    credentials_db.update(creds)
+    
+    # Opzionale: prova a salvare su file se possibile (per sviluppo locale)
+    try:
+        CREDENTIALS_FILE = os.path.join(BASE_DIR, 'credenziali.txt')
+        with open(CREDENTIALS_FILE, "w") as f:
+            for username, data in creds.items():
+                line = f"{username}:{data['password']}:{data.get('avatar', 'pikachu.png')}\n"
+                f.write(line)
+    except Exception:
+        pass  # Ignora errori di scrittura file in produzione
 
 # Sistema di gioco multiplayer
 games = {}
@@ -184,25 +170,32 @@ def get_hand_name(score):
         return "Carta Alta"
 
 def start_turn_timer(game_id):
-    """Avvia il timer per il turno corrente"""
+    """Avvia il timer per il turno corrente - VERSIONE MIGLIORATA"""
     def timer_callback():
-        time.sleep(60)  # 60 secondi
-        if game_id in games and game_id in turn_timers:
-            game = games[game_id]
-            if not game.get('game_over', False) and game.get('phase') == 'cambio':
-                # Passa automaticamente il turno
-                current_player = game['players'][game['current_player']]
-                game['players_ready'][current_player] = True
+        try:
+            time.sleep(30)  # Ridotto a 30 secondi per test più rapidi
+            if game_id in games and game_id in turn_timers:
+                game = games[game_id]
+                if not game.get('game_over', False) and game.get('phase') == 'cambio':
+                    # Passa automaticamente il turno
+                    current_player_name = game['players'][game['current_player']]
+                    game['players_ready'][current_player_name] = True
 
-                # Controlla se tutti i giocatori sono pronti
-                if all(game['players_ready'].values()):
-                    evaluate_round(game)
-                else:
-                    # Passa al prossimo giocatore
-                    game['current_player'] = (game['current_player'] + 1) % len(game['players'])
-                    start_turn_timer(game_id)  # Avvia timer per il prossimo giocatore
+                    # Controlla se tutti i giocatori sono pronti
+                    if all(game['players_ready'].values()):
+                        evaluate_round(game)
+                    else:
+                        # Passa al prossimo giocatore
+                        game['current_player'] = (game['current_player'] + 1) % len(game['players'])
+                        game['turn_start_time'] = datetime.now()
+                        start_turn_timer(game_id)  # Avvia timer per il prossimo giocatore
 
-            # Rimuovi il timer
+                # Rimuovi il timer
+                if game_id in turn_timers:
+                    del turn_timers[game_id]
+        except Exception as e:
+            print(f"Errore nel timer: {e}")
+            # Rimuovi il timer anche in caso di errore
             if game_id in turn_timers:
                 del turn_timers[game_id]
 
@@ -214,9 +207,13 @@ def start_turn_timer(game_id):
             pass
 
     # Avvia nuovo timer
-    timer = threading.Timer(60.0, timer_callback)
-    timer.start()
-    turn_timers[game_id] = timer
+    try:
+        timer = threading.Timer(30.0, timer_callback)  # 30 secondi
+        timer.daemon = True  # Importante per la produzione
+        timer.start()
+        turn_timers[game_id] = timer
+    except Exception as e:
+        print(f"Errore nell'avvio del timer: {e}")
 
 # Rotta principale
 @app.route('/')
@@ -253,11 +250,11 @@ def register():
         return redirect(url_for('home'))
 
     # Assegna un avatar temporaneo
-    creds[username] = {
+    new_creds = {username: {
         'password': password,
         'avatar': 'pikachu.png'
-    }
-    save_credentials(creds)
+    }}
+    save_credentials(new_creds)
     session['user'] = username
     session.pop('avatar_selected', None)  # Forza la selezione dell'avatar
     return redirect(url_for('change_avatar'))
@@ -540,10 +537,10 @@ def game(game_id):
                            creds=creds)
 
     # Calcola il tempo rimanente per il turno
-    turn_time_left = 60
+    turn_time_left = 30  # Cambiato a 30 secondi
     if game.get('turn_start_time'):
         elapsed = (datetime.now() - game['turn_start_time']).total_seconds()
-        turn_time_left = max(0, 60 - elapsed)
+        turn_time_left = max(0, 30 - elapsed)
 
     return render_template('game.html', 
                        game=game, 
@@ -718,10 +715,10 @@ def game_status(game_id):
         game = games[game_id]
 
         # Calcola il tempo rimanente per il turno
-        turn_time_left = 60
+        turn_time_left = 30  # Cambiato a 30 secondi
         if game.get('turn_start_time'):
             elapsed = (datetime.now() - game['turn_start_time']).total_seconds()
-            turn_time_left = max(0, 60 - elapsed)
+            turn_time_left = max(0, 30 - elapsed)
 
         return jsonify({
             'game_over': game.get('game_over', False),
