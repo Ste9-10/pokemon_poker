@@ -1,0 +1,20 @@
+name: Keep Render Awake
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render health endpoint
+        env:
+          RENDER_HEALTHCHECK_URL: ${{ secrets.RENDER_HEALTHCHECK_URL }}
+        run: |
+          if [ -z "$RENDER_HEALTHCHECK_URL" ]; then
+            echo "Secret RENDER_HEALTHCHECK_URL non impostato"
+            exit 1
+          fi
+          curl -L -s "$RENDER_HEALTHCHECK_URL" > /dev/null
