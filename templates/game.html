@@ -492,7 +492,7 @@
             isActionInProgress = true;
             stopAutoRefresh();
             
-            fetch('/action/discard_selected', {
+            fetch('/action/discard_selected?game_id={{ game_id }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -514,7 +514,7 @@
             isActionInProgress = true;
             stopAutoRefresh();
             
-            fetch('/action/skip_discard', {
+            fetch('/action/skip_discard?game_id={{ game_id }}', {
                 method: 'POST'
             }).then(response => {
                 if (response.ok) {
@@ -530,7 +530,7 @@
             isActionInProgress = true;
             stopAutoRefresh();
             
-            fetch('/action/next_round', {
+            fetch('/action/next_round?game_id={{ game_id }}', {
                 method: 'POST'
             }).then(response => {
                 if (response.ok) {
@@ -578,10 +578,12 @@
                             const currentPlayer = {{ game.current_player }};
                             const currentPhase = '{{ game.phase }}';
                             const showRoundResult = {{ 'true' if game.show_round_result else 'false' }};
+                            const playersCount = {{ game.players|length }};
                             
                             if (data.current_player !== currentPlayer || 
                                 data.phase !== currentPhase ||
-                                data.show_round_result !== showRoundResult) {
+                                data.show_round_result !== showRoundResult ||
+                                data.players_count !== playersCount) {
                                 window.location.reload();
                             }
                         }
