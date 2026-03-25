@@ -375,6 +375,11 @@ def remove_user_from_all_contexts(user):
                     games.pop(room_id, None)
 
 
+@app.route('/health')
+def health():
+    return jsonify({'status': 'ok'}), 200
+
+
 @app.route('/')
 def home():
     if 'user' in session:
